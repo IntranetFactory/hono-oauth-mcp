@@ -1,0 +1,96 @@
+import {
+  bearerAuth,
+  StreamableHTTPTransport,
+  simpleMcpAuthRouter,
+} from "@hono/mcp";
+import { Hono } from "hono";
+import { cors } from "hono/cors";
+import mcp from "./mcp";
+
+const app = new Hono().use(
+  cors({
+    origin: (origin) => origin,
+    credentials: true,
+  }),
+);
+
+
+/*
+const transport = new StreamableHTTPTransport();
+
+app.all(
+  "/mcp",
+  bearerAuth({
+    verifyToken: async (token, c) => {      
+      return !!token;  // PostGREST request will verify token
+    },
+    // The correct option name for customizing missing-auth responses
+    noAuthenticationHeader: {
+      wwwAuthenticateHeader: (c) => {
+        const protocol = c.req.header("x-forwarded-proto") || "https";
+        const host = c.req.header("x-forwarded-host") || c.req.header("host");
+        const metadataUrl = `${protocol}://${host}/.well-known/oauth-protected-resource`;
+        
+        // This challenge is what triggers Claude to fetch your metadata
+        return `Bearer realm="mcp", resource_metadata="${metadataUrl}"`;
+      }
+    }
+  }),
+  async (c) => {
+    if (!mcp.isConnected()) {
+      await mcp.connect(transport);
+    }
+    return transport.handleRequest(c);
+  }
+);
+*/
+
+app.all(
+  "/mcp",
+  bearerAuth({
+    verifyToken: async (token, c) => !!token,
+    noAuthenticationHeader: {
+      wwwAuthenticateHeader: (c) => {
+        // Use the built-in URL object for safer metadata URL construction
+        const url = new URL(c.req.url);
+        const metadataUrl = `${url.origin}/.well-known/oauth-protected-resource`;
+        return `Bearer realm="mcp", resource_metadata="${metadataUrl}"`;
+      }
+    }
+  }),
+  async (c) => {
+    // 1. Initialize a fresh transport for this request context
+    const transport = new StreamableHTTPTransport();
+    
+    // 2. Always connect the MCP server for the current request
+    // This ensures the transport is bound to the current Worker's lifecycle
+    await mcp.connect(transport);
+    
+    return transport.handleRequest(c);
+  }
+);
+
+
+// OAuth protected resource metadata
+app.get("/.well-known/oauth-protected-resource", (c) => {
+  // Get the resource URL from x-forwarded-host or construct from request
+  const protocol = c.req.header("x-forwarded-proto") || "http";
+  const host = c.req.header("x-forwarded-host") || c.req.header("host") || new URL(c.req.url).host;
+  const resource = `${protocol}://${host}`;
+
+  return c.json({
+    resource,
+    authorization_servers: [
+      "https://jdnlvjebzatlybaysdcp.supabase.co/auth/v1"
+    ],
+    bearer_methods_supported: ["header"]
+  });
+});
+
+// Catch-all route for 404
+app.all("*", (c) => {
+  console.log(`404 - Route not found: ${c.req.url}`);
+  return c.json({ error: "Not Found" }, 404);
+});
+
+export default app;
