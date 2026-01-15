@@ -22,7 +22,7 @@ const transport = new StreamableHTTPTransport();
 app.all(
   "/mcp",
   bearerAuth({
-    verifyToken: (token) => {
+    verifyToken: (token:string) => {
       return !!token;  // PostGREST request will verify token
     },
     // The correct option name for customizing missing-auth responses

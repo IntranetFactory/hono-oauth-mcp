@@ -39,11 +39,12 @@ First, create a new app (one-time setup):
 deno deploy create --org=<your-org>
 ```
 
-Then deploy:
 ```bash
+# Deploy to production
 pnpm deno:deploy
 # or directly with deno
 deno task deploy
+
 ```
 
 ## Supabase Edge Functions
@@ -69,7 +70,7 @@ supabase link --project-ref <your-project-ref>
 
 Then deploy the function:
 ```bash
-supabase functions deploy postgrest-mcp
+supabase functions deploy hono-oauth-mcp
 ```
 
 Or deploy all functions:
