@@ -2,7 +2,9 @@
   "tasks": {
     "dev": "deno run --allow-net --allow-env --watch src/index.deno.ts",
     "start": "deno run --allow-net --allow-env src/index.deno.ts",
-    "deploy": "deno deploy --prod"
+    "deploy": "deno deploy --prod",
+    "supabase:dev": "supabase functions serve mcp-oauth",
+    "supabase:deploy": "supabase functions deploy mcp-oauth"
   },
   "imports": {
     "@hono/mcp": "npm:@hono/mcp@^0.2.3",

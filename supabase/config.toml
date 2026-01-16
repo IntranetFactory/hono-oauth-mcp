@@ -1,0 +1,6 @@
+# Supabase Edge Functions configuration
+[edge_runtime]
+policy = "per_worker"
+
+[functions.mcp-oauth]
+verify_jwt = false

@@ -6,7 +6,18 @@ import {
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import mcp from "./mcp.ts";
-import { json } from "zod/v4";
+
+// Extract base path and host from SUPABASE_URL environment variable (platform-agnostic)
+// using Hono Context Storage Middleware getContext might be better 
+const getEnv = (key: string): string | undefined => {
+  if (typeof process !== "undefined" && process.env) return process.env[key];
+  if (typeof Deno !== "undefined" && Deno.env) return Deno.env.get(key);
+  return undefined;
+};
+
+const SUPABASE_URL = getEnv("SUPABASE_URL");
+const BASE_HOST = SUPABASE_URL ? new URL(SUPABASE_URL).host : "";
+const BASE_PATH = SUPABASE_URL ? "/functions/v1/mcp-oauth" : "";
 
 const app = new Hono().use(
   cors({
@@ -15,22 +26,21 @@ const app = new Hono().use(
   }),
 );
 
-
-
 const transport = new StreamableHTTPTransport();
 
 app.all(
   "/mcp",
   bearerAuth({
-    verifyToken: (token:string) => {
+    verifyToken: (token: string) => {
       return !!token;  // PostGREST request will verify token
     },
     // The correct option name for customizing missing-auth responses
     noAuthenticationHeader: {
       wwwAuthenticateHeader: (c) => {
         const protocol = c.req.header("x-forwarded-proto") || "https";
-        const host = c.req.header("x-forwarded-host") || c.req.header("host");
-        const metadataUrl = `${protocol}://${host}/.well-known/oauth-protected-resource`;
+        let host = c.req.header("x-forwarded-host") || c.req.header("host");
+        if ((BASE_HOST)) host = BASE_HOST;
+        const metadataUrl = `${protocol}://${host}${BASE_PATH}/.well-known/oauth-protected-resource`;
 
         // This challenge is what triggers Claude to fetch your metadata
         return `Bearer realm="mcp", resource_metadata="${metadataUrl}"`;
@@ -48,28 +58,43 @@ app.all(
 );
 
 
-// OAuth protected resource metadata
-app.get("/.well-known/oauth-protected-resource", (c) => {
-  // Get the resource URL from x-forwarded-host or construct from request
+// OAuth protected resource metadata handler
+const oauthMetadataHandler = (c: any) => {
   const url = new URL(c.req.url);
-  const protocol = c.req.header("x-forwarded-proto") || url.protocol.slice(0, -1); // removes the ':'
-  const host = c.req.header("x-forwarded-host") || c.req.header("host") || url.host;
+  const protocol = c.req.header("x-forwarded-proto") || url.protocol.slice(0, -1);
+  let host = c.req.header("x-forwarded-host") || c.req.header("host") || url.host;
+  if ((BASE_HOST)) host = BASE_HOST;
 
-  const resource = `${protocol}://${host}`;
+  const resource = `${protocol}://${host}${BASE_PATH}`;
   return c.json({
     resource,
     authorization_servers: [
       "https://jdnlvjebzatlybaysdcp.supabase.co/auth/v1"
     ],
     bearer_methods_supported: ["header"]
-    
+  });
+};
+
+// OAuth protected resource metadata (public endpoints)
+app.get(`${BASE_PATH}/.well-known/oauth-protected-resource`, oauthMetadataHandler);
+app.get("/.well-known/oauth-protected-resource", oauthMetadataHandler);
+
+// Root endpoint for health check
+app.get("/", (c) => {
+  return c.json({
+    status: "ok",
+    message: "MCP OAuth Server",
+    endpoints: {
+      mcp: "/mcp",
+      metadata: `${BASE_HOST}${BASE_PATH}/.well-known/oauth-protected-resource`
+    }
   });
 });
 
 // Catch-all route for 404
 app.all("*", (c) => {
   console.log(`404 - Route not found: ${c.req.url}`);
-  return c.json({ error: "Not Found" }, 404);
+  return c.json({ error: "Not Found", path: c.req.path }, 404);
 });
 
 export default app;

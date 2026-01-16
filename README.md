@@ -1,53 +1,13 @@
-# Hono/MCP with Cloudflare Workers and Deno Deploy
+# Hono OAuth MCP Server
 
-This project supports both Cloudflare Workers and Deno Deploy platforms.
-
-## Cloudflare Workers
-
-### Development
-```bash
-pnpm cloudflare:dev
-```
-
-### Deployment
-```bash
-pnpm cloudflare:deploy
-```
-
-## Deno Deploy
-
-### Prerequisites
-Install Deno:
-```bash
-# macOS/Linux
-curl -fsSL https://deno.land/install.sh | sh
-
-# Windows
-irm https://deno.land/install.ps1 | iex
-```
-
-### Development
-```bash
-pnpm deno:dev
-# or directly with deno
-deno task dev
-```
-
-### Deployment
-First, create a new app (one-time setup):
-```bash
-deno deploy create --org=<your-org>
-```
-
-```bash
-# Deploy to production
-pnpm deno:deploy
-# or directly with deno
-deno task deploy
-
-```
+This is a Hono-based MCP (Model Context Protocol) server that works with any MCP-compliant OAuth2 server for authentication. The server is configured for deployment to:
+- Supabase Edge Functions
+- Cloudflare Workers
+- Deno Deploy
 
 ## Supabase Edge Functions
+
+This server supports MCP authentication from the Supabase OAuth2 server.
 
 ### Prerequisites
 Supabase CLI should be installed. If needed, install it as a dependency:
@@ -76,4 +36,53 @@ supabase functions deploy hono-oauth-mcp
 Or deploy all functions:
 ```bash
 supabase functions deploy
+```
+
+> **Note on MCP Inspector Compatibility (January 2026):**
+> The MCP Inspector is not yet compliant with RFC 9728 and does not properly handle the `resource_metadata` parameter in WWW-Authenticate headers. This causes issues when the OAuth metadata endpoint is served at an uncommon path like `/functions/v1/mcp-oauth/.well-known/oauth-protected-resource`. Claude Desktop and Claude Web handle this correctly and will successfully discover the metadata endpoint. See [Inspector issue #576](https://github.com/modelcontextprotocol/inspector/issues/576) for details.
+
+## Cloudflare Workers
+
+### Development
+```bash
+pnpm cloudflare:dev
+```
+
+### Deployment
+```bash
+pnpm cloudflare:deploy
+```
+
+## Deno 
+
+### Prerequisites
+Install Deno:
+```bash
+# macOS/Linux
+curl -fsSL https://deno.land/install.sh | sh
+
+# Windows
+irm https://deno.land/install.ps1 | iex
+```
+
+### Development
+```bash
+pnpm deno:dev
+# or directly with deno
+deno task dev
+```
+
+### Deployment 
+
+First, create a new app (one-time setup):
+```bash
+deno deploy create --org=<your-org>
+```
+
+```bash
+# Deploy to production
+pnpm deno:deploy
+# or directly with deno
+deno task deploy
+
 ```
