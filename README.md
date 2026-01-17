@@ -5,9 +5,20 @@ This is a Hono-based MCP (Model Context Protocol) server that works with any MCP
 - Cloudflare Workers
 - Deno Deploy
 
+## Environment Variables
+
+### `AUTH_SERVER_URL`
+OAuth authorization server URL. Required for Cloudflare Workers and Deno Deploy deployments.
+
+**Optional when deployed as a Supabase Edge Function** - will be auto-constructed from the automatically available `SUPABASE_URL` environment variable.
+
+Example: `https://jdnlvjebzatlybaysdcp.supabase.co/auth/v1`
+
 ## Supabase Edge Functions
 
 This server supports MCP authentication from the Supabase OAuth2 server.
+
+**Environment**: When deployed as a Supabase Edge Function, the `SUPABASE_URL` environment variable is automatically available. The server will auto-construct the `AUTH_SERVER_URL` from it (as `{origin}/auth/v1`), so no additional environment configuration is needed.
 
 ### Prerequisites
 Supabase CLI should be installed. If needed, install it as a dependency:

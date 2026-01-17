@@ -7,8 +7,8 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import mcp from "./mcp.ts";
 
-// Extract base path and host from SUPABASE_URL environment variable (platform-agnostic)
-// using Hono Context Storage Middleware getContext might be better 
+// Platform-agnostic environment variable access
+// Works with both Node.js (process.env) and Deno (Deno.env) 
 const getEnv = (key: string): string | undefined => {
   if (typeof process !== "undefined" && process.env) return process.env[key];
   if (typeof Deno !== "undefined" && Deno.env) return Deno.env.get(key);
@@ -18,6 +18,10 @@ const getEnv = (key: string): string | undefined => {
 const SUPABASE_URL = getEnv("SUPABASE_URL");
 const BASE_HOST = SUPABASE_URL ? new URL(SUPABASE_URL).host : "";
 const BASE_PATH = SUPABASE_URL ? "/functions/v1/mcp-oauth" : "";
+
+// Auth server URL: use explicit env var, or construct from SUPABASE_URL
+const AUTH_SERVER_URL = getEnv("AUTH_SERVER_URL") || 
+  (SUPABASE_URL ? `${new URL(SUPABASE_URL).origin}/auth/v1` : "");
 
 const app = new Hono().use(
   cors({
@@ -68,9 +72,7 @@ const oauthMetadataHandler = (c: any) => {
   const resource = `${protocol}://${host}${BASE_PATH}`;
   return c.json({
     resource,
-    authorization_servers: [
-      "https://jdnlvjebzatlybaysdcp.supabase.co/auth/v1"
-    ],
+    authorization_servers: AUTH_SERVER_URL ? [AUTH_SERVER_URL] : [],
     bearer_methods_supported: ["header"]
   });
 };
