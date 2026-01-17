@@ -1,5 +1,5 @@
 {
-  "name": "postgrest-mcp",
+  "name": "mcp-oauth",
   "type": "module",
   "scripts": {
     "cloudflare:dev": "wrangler dev --port 3000",

@@ -41,7 +41,7 @@ supabase link --project-ref <your-project-ref>
 
 Then deploy the function:
 ```bash
-supabase functions deploy postgrest-mcp
+supabase functions deploy mcp-oauth
 ```
 
 Or deploy all functions:

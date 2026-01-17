@@ -3,8 +3,8 @@
     "dev": "deno run --allow-net --allow-env --watch src/index.deno.ts",
     "start": "deno run --allow-net --allow-env src/index.deno.ts",
     "deploy": "deno deploy --prod",
-    "supabase:dev": "supabase functions serve postgrest-mcp --import-map deno.json",
-    "supabase:deploy": "supabase functions deploy postgrest-mcp --no-verify-jwt --import-map deno.json"
+    "supabase:dev": "supabase functions serve mcp-oauth --import-map deno.json",
+    "supabase:deploy": "supabase functions deploy mcp-oauth --no-verify-jwt --import-map deno.json"
   },
   "imports": {
     "@hono/mcp": "npm:@hono/mcp@^0.2.3",
@@ -19,9 +19,5 @@
       "deno.window",
       "deno.unstable"
     ]
-  },
-  "deploy": {
-    "org": "adenin",
-    "app": "postgrest-mcp"
   }
 }

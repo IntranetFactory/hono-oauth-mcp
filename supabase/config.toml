@@ -2,5 +2,5 @@
 [edge_runtime]
 policy = "per_worker"
 
-[functions.postgrest-mcp]
+[functions.mcp-oauth]
 verify_jwt = false
