@@ -1,5 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { z } from "zod/v3";
+import { z } from "zod/v4";
 
 const mcpServer = new McpServer({
   name: "my-mcp-server",
@@ -13,7 +13,7 @@ mcpServer.registerTool(
     description: "A simple greeting tool",
     inputSchema: { name: z.string().describe("Name to greet") },
   },
-  async ({ name }) => {
+  ({ name }) => {
     return { content: [{ type: "text", text: `Hello, ${name}!` }] };
   }
 );

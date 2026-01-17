@@ -1,5 +1,5 @@
 {
-  "name": "simple-auth-workers",
+  "name": "postgrest-mcp",
   "type": "module",
   "scripts": {
     "cloudflare:dev": "wrangler dev --port 3000",
